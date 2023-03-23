@@ -15,9 +15,8 @@ logger = logging.getLogger("MultiProcessTools")
 class MultiProcessHelper:
     def __init__(
         self,
-        pipe_name: str,
+        name: str,
         working_directory: str,
-        sub_directories: dict,
         loggers: List[str],
     ):
         time.sleep(np.random.random())
@@ -25,16 +24,18 @@ class MultiProcessHelper:
         self.tempfiles = []
         self.directories = {}
         self.loggers = []
-        if not os.path.exists(working_directory):
-            raise ValueError(f"working_directory does not exist: {working_directory}")
+        if os.path.isdir(working_directory):
+            self.directories["working_directory"] = working_directory
+        else:
+            try:
+                os.makedirs(working_directory, exist_ok=True)
+                self.directories["working_directory"] = working_directory
+            except:
+                raise ValueError(f"{working_directory} is not a valid path")
 
-        self._initialize_instance_number(file_name=pipe_name, path=working_directory)
-        self._initialize_directories(
-            working_directory=working_directory,
-            sub_directories=sub_directories,
-        )
+        self._initialize_instance_number(file_name=name, path=working_directory)
         self._initialize_loggers(
-            log_name=pipe_name,
+            log_name=name,
             job_names=loggers,
             log_path=working_directory,
             instance_number=self.instance_number,
@@ -57,26 +58,6 @@ class MultiProcessHelper:
             )
         self.instance_number = instance_number
 
-    def _initialize_directories(
-        self,
-        working_directory: str,
-        sub_directories: dict,
-    ) -> None:
-        if os.path.isdir(working_directory):
-            self.directories["working_directory"] = working_directory
-        else:
-            try:
-                os.makedirs(working_directory)
-                self.directories["working_directory"] = working_directory
-            except:
-                raise ValueError(f"{working_directory} is not a valid path")
-        if not isinstance(sub_directories, list):
-            raise ValueError(
-                f"sub_directories be a list, but {type(sub_directories)} was given"
-            )
-        for dir_name in sub_directories:
-            self.create_directory(dir_name=dir_name)
-
     def _initialize_loggers(
         self,
         log_name: str,
@@ -98,19 +79,20 @@ class MultiProcessHelper:
         path = os.path.join(self.directories["working_directory"], dir_name)
         if os.path.exists(path):
             logger.info(f"Path already exists:\n\n{path} ")
+            if dir_name not in self.directories:
+                self.directories[dir_name] = path
         else:
             logger.info(f"Creating path:\n\n{path}")
-        os.makedirs(path, exist_ok=True)
-        self.directories[dir_name] = path
+            assert dir_name not in self.directories.keys()
+            os.makedirs(path, exist_ok=True)
+            self.directories[dir_name] = path
 
     def get_directory(self, dir_name):
         if dir_name in self.directories.keys():
             return self.directories[dir_name]
-        elif os.path.isdir(dir_name):
-            return dir_name
         else:
             raise ValueError(
-                f"{dir_name} is not in self.directories and is not a valid path"
+                f"{dir_name} is not in self.directories"
             )
 
     def close_all_loggers(self) -> None:
@@ -151,12 +133,6 @@ class MultiProcessHelper:
                 logger.error("Unexpected error:", sys.exc_info()[0])
                 raise RuntimeError("Unexpected error")
 
-    def delete_all_tempfiles(self) -> None:
-        """Delete all temporary files"""
-        all_tempfiles = list(self.tempfiles)
-        for tempfile in all_tempfiles:
-            self.delete_tempfile(tempfile)
-
     def delete_tempfile(self, tempfile) -> None:
         if os.path.exists(tempfile):
             logger.info(f"Deleting tempfile: {tempfile}")
@@ -167,6 +143,12 @@ class MultiProcessHelper:
             self.tempfiles.remove(tempfile)
         else:
             logger.warning(f"{tempfile} not in self.tempfiles")
+
+    def delete_all_tempfiles(self) -> None:
+        """Delete all temporary files"""
+        all_tempfiles = list(self.tempfiles)
+        for tempfile in all_tempfiles:
+            self.delete_tempfile(tempfile)
 
     def cleanup(self):
         logger.info("Cleaning up!")
