@@ -88,8 +88,11 @@ class MultiProcessHelper:
             self.directories[dir_name] = path
 
     def get_directory(self, dir_name):
-        if dir_name in self.directories.keys():
-            return self.directories[dir_name]
+        if any(dir_name in i for i in self.directories.items()):
+            if dir_name in self.directories.keys():
+                return self.directories[dir_name]
+            else:
+                return dir_name
         else:
             raise ValueError(
                 f"{dir_name} is not in self.directories"
