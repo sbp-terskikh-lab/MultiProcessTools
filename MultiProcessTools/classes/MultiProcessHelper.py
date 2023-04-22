@@ -96,6 +96,10 @@ class MultiProcessHelper:
 
     def create_directory(self, dir_name):
         path = os.path.join(self.directories["working_directory"], dir_name)
+        if os.path.exists(path):
+            logger.info(f"Path already exists:\n\n{path} ")
+        else:
+            logger.info(f"Creating path:\n\n{path}")
         os.makedirs(path, exist_ok=True)
         self.directories[dir_name] = path
 
