@@ -32,12 +32,13 @@ class MultiProcessHelper:
                 self.directories["working_directory"] = working_directory
             except:
                 raise ValueError(f"{working_directory} is not a valid path")
-
+        log_dir = os.path.join(working_directory, "multiprocesstools_logs")
+        os.makedirs(log_dir, exist_ok=True)
         self._initialize_instance_number(file_name=name, path=working_directory)
         self._initialize_loggers(
             log_name=name,
             job_names=loggers,
-            log_path=working_directory,
+            log_path=log_dir,
             instance_number=self.instance_number,
         )
         logger = logging.getLogger(loggers[0])
@@ -94,9 +95,7 @@ class MultiProcessHelper:
             else:
                 return dir_name
         else:
-            raise ValueError(
-                f"{dir_name} is not in self.directories"
-            )
+            raise ValueError(f"{dir_name} is not in self.directories")
 
     def close_all_loggers(self) -> None:
         for logger_name in self.loggers:
