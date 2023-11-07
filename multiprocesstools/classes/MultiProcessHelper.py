@@ -82,6 +82,11 @@ class MultiProcessHelper:
             logger.info(f"Path already exists:\n\n{path} ")
             if dir_name not in self.directories:
                 self.directories[dir_name] = path
+            elif dir_name in self.directories:
+                if self.directories[dir_name] != path:
+                    raise ValueError(
+                        f"Directory {dir_name} already exists, but the path is different: {self.directories[dir_name]} != {path}"
+                    )
         else:
             logger.info(f"Creating path:\n\n{path}")
             assert dir_name not in self.directories.keys()
