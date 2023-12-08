@@ -11,6 +11,7 @@ MultiProcessTools was developed to assist in the computational biology work done
 
 Import multiprocesshelper, initialize the helper
 
+"""python
     from multiprocesstools import multiprocesshelper
 
     mph = multiprocesshelper(
@@ -21,6 +22,7 @@ Import multiprocesshelper, initialize the helper
                 "my_analysis_logger3", "my_analysis_logger4", 
                 ],
     )
+"""
 
 Basic usage of a multiprocesshelper in a script. Generally you will do the following 
 1) Create a directory where you are saving your results
@@ -33,7 +35,7 @@ Basic usage of a multiprocesshelper in a script. Generally you will do the follo
 6) Delete the tempfile
 7) Cleanup if needed
 
-
+"""python
     if name == "__main__":
         mph.create_directory("my_analysis_results")
         for f in files_to_analyze:
@@ -69,10 +71,13 @@ Basic usage of a multiprocesshelper in a script. Generally you will do the follo
                     temp_file_name = temp_file_name,
                     path = "my_analysis_results"
                 )
+"""
 
 In the case of catastrophic failures and the program needs to end, simply use the cleanup method to delete all tempfiles & close all loggers created by & associated with your multiprocesshelper
 
+"""python
     ... Program catastrophically fails ...
     except:
         ... Handle error ...
         mph.cleanup()
+"""
