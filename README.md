@@ -5,3 +5,20 @@ MultiProcessTools is a very lightweight toolkit for lazily handling shared files
 This project is in its infancy and much of the code is actively being developed (and deleted), so expect major refactoring until future versions specify otherwise. 
 
 MultiProcessTools was developed to assist in the computational biology work done in the Terskih Lab at SBP Medical Discovery Institute.
+
+
+## Usage
+
+"""
+from multiprocesstools import multiprocesshelper
+
+mph = multiprocesshelper(
+        pipe_name = "my_analysis",
+        working_directory = "path/to/my/output/location",
+        sub_directories = {
+            "
+        },
+        loggers: List[str],
+)
+
+"""
