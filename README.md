@@ -11,19 +11,16 @@ MultiProcessTools was developed to assist in the computational biology work done
 
 Import multiprocesshelper, initialize the helper
 
-"""
-from multiprocesstools import multiprocesshelper
+    from multiprocesstools import multiprocesshelper
 
-mph = multiprocesshelper(
-        name = "my_analysis",
-        working_directory = "path/to/my/output/location",
-        loggers = [
-            "my_analysis_logger1", "my_analysis_logger2", 
-            "my_analysis_logger3", "my_analysis_logger4", 
-            ],
-)
-
-"""
+    mph = multiprocesshelper(
+            name = "my_analysis",
+            working_directory = "path/to/my/output/location",
+            loggers = [
+                "my_analysis_logger1", "my_analysis_logger2", 
+                "my_analysis_logger3", "my_analysis_logger4", 
+                ],
+    )
 
 Basic usage of a multiprocesshelper in a script. Generally you will do the following 
 1) Create a directory where you are saving your results
@@ -35,49 +32,45 @@ Basic usage of a multiprocesshelper in a script. Generally you will do the follo
 6) Delete the tempfile
 7) Cleanup if needed
 
-"""
-if name == "__main__":
-    mph.create_directory("my_analysis_results")
-    for f in files_to_analyze:
-        file_name = f.split(".")[0]
-        final_file_name = file_name + "_analyzed.csv"
-        temp_file_name = file_name + ".tmp"
+    if name == "__main__":
+        mph.create_directory("my_analysis_results")
+        for f in files_to_analyze:
+            file_name = f.split(".")[0]
+            final_file_name = file_name + "_analyzed.csv"
+            temp_file_name = file_name + ".tmp"
 
-        file_is_available = mph.create_temp_file(
-            final_file_name = final_file_name,
-            temp_file_name = temp_file_name,
-            path = "my_analysis_results"
-
-        )
-        if file_is_available == False:
-            continue
-        try:
-
-            .... Perform analysis ....
-
-
-            ... Save the results with name assigned to final_file_name ...
-
-            mph.delete_tempfile(
+            file_is_available = mph.create_temp_file(
+                final_file_name = final_file_name,
                 temp_file_name = temp_file_name,
                 path = "my_analysis_results"
-            )
-        
-        except:
 
-            ... Log exception ...
-        
-            mph.delete_tempfile(
-                temp_file_name = temp_file_name,
-                path = "my_analysis_results"
             )
-"""
+            if file_is_available == False:
+                continue
+            try:
+
+                .... Perform analysis ....
+
+
+                ... Save the results with name assigned to final_file_name ...
+
+                mph.delete_tempfile(
+                    temp_file_name = temp_file_name,
+                    path = "my_analysis_results"
+                )
+            
+            except:
+
+                ... Log exception ...
+            
+                mph.delete_tempfile(
+                    temp_file_name = temp_file_name,
+                    path = "my_analysis_results"
+                )
 
 In the case of catastrophic failures and the program needs to end, simply use the cleanup method to delete all tempfiles & close all loggers created by & associated with your multiprocesshelper
 
-"""
-... Program catastrophically fails ...
-except:
-    ... Handle error ...
-    mph.cleanup()
-""
+    ... Program catastrophically fails ...
+    except:
+        ... Handle error ...
+        mph.cleanup()
