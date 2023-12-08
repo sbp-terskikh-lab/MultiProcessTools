@@ -18,8 +18,10 @@ mph = multiprocesshelper(
         name = "my_analysis",
         working_directory = "path/to/my/output/location",
         loggers = [
-            "my_analysis_logger1", "my_analysis_logger2", 
-            "my_analysis_logger3", "my_analysis_logger4", 
+            "my_analysis_logger1", 
+            "my_analysis_logger2", 
+            "my_analysis_logger3", 
+            "my_analysis_logger4", 
             ],
 )
 ```
