@@ -6,8 +6,9 @@ This project is in its infancy and much of the code is actively being developed 
 
 MultiProcessTools was developed to assist in the computational biology work done in the Terskih Lab at SBP Medical Discovery Institute.
 
+Please feel free to reach out to Martin with any questions regarding EpiLands @ malvarezkuglen@sbpdiscovery.org
 
-## Usage
+## Basic Usage
 
 Import multiprocesshelper, initialize the helper
 
