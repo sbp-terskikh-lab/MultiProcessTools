@@ -26,9 +26,10 @@ Basic usage of a multiprocesshelper in a script. Generally you will do the follo
 1) Create a directory where you are saving your results
 2) Iterate over the files needed to be analyzed in parallel
 3) Create a tempfile & check if it is available
+   1) Note that path may be the string name provided to "create_directory" or it may be the entire path, so long as it exists as either a key or value in mph.directories.
 4) Perform the analysis with error handling
-5) Save the file name
-   1) It is crucial that you save this file under the exact name you specify as "final_file_name", this is how multiprocesshelper knows which files are finished, in progress, or not even started.
+5) Save the results as final_file_name
+   1) It is crucial that you save this file under the exact name you specify as "final_file_name", and in the same directory as specified in path. This is how multiprocesshelper knows which files are finished, in progress, or not even started.
 6) Delete the tempfile
 7) Cleanup if needed
 
