@@ -2,7 +2,7 @@
 
 MultiProcessTools is a very lightweight toolkit for quickly handling shared filesystem parallel analysis through tempfile creation and collection.
 
-In scientific research we are often running the exact same computation on many different files. For instance, you may be performing image semgentation and feature extraction on thousands of images. Is there any way to speed this up? Yes! Parallel computing.
+In scientific research we are often running the exact same computation on many different files. For instance, you may be performing segmentation and feature extraction on thousands of images. Is there any way to speed this up? Yes! Parallel computing.
 
 Isn't this problem already solved you may ask; there are packages like [Joblib](https://joblib.readthedocs.io/en/stable/) and even python itself has [native multiprocessing](https://docs.python.org/3/library/concurrent.futures.html). Indeed, but these only work on a single machine: they do not easily lend themselves to cross-machine computing (cluster computing).
 
