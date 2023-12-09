@@ -18,12 +18,12 @@ Please feel free to reach out to Martin with any questions regarding EpiLands @ 
 
 ## Basic Usage
 
-Import multiprocesshelper, initialize the helper
+Import MultiProcessHelper, initialize the helper
 
 ```python
-from multiprocesstools import multiprocesshelper
+from multiprocesstools import MultiProcessHelper
 
-mph = multiprocesshelper(
+mph = MultiProcessHelper(
         name = "my_analysis",
         working_directory = "path/to/my/output/location",
         loggers = [
@@ -35,14 +35,14 @@ mph = multiprocesshelper(
 )
 ```
 
-Basic usage of a multiprocesshelper in a script. Generally you will do the following 
+Basic usage of a MultiProcessHelper in a script. Generally you will do the following 
 1) Create a directory where you are saving your results
 2) Iterate over the files needed to be analyzed in parallel
 3) Create a tempfile & check if it is available
    1) Note that path may be the string name provided to "create_directory" or it may be the entire path, so long as it exists as either a key or value in mph.directories.
 4) Perform the analysis with error handling
 5) Save the results as final_file_name
-   1) It is crucial that you save this file under the exact name you specify as "final_file_name", and in the same directory as specified in path. This is how multiprocesshelper knows which files are finished, in progress, or not even started.
+   1) It is crucial that you save this file under the exact name you specify as "final_file_name", and in the same directory as specified in path. This is how MultiProcessHelper knows which files are finished, in progress, or not even started.
 6) Delete the tempfile
 7) Cleanup if needed
 
@@ -84,7 +84,7 @@ if name == "__main__":
             )
 ```
 
-In the case of catastrophic failures and the program needs to end, simply use the cleanup method to delete all tempfiles & close all loggers created by & associated with your multiprocesshelper
+In the case of catastrophic failures and the program needs to end, simply use the cleanup method to delete all tempfiles & close all loggers created by & associated with your MultiProcessHelper
 
 ```python
 ... Program catastrophically fails ...
