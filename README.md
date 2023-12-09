@@ -1,6 +1,14 @@
-# MultiProcessTools -- A Lazy Way to Handle Parallel Processing via a Shared Filesystem in Python
+# MultiProcessTools -- A Quick Way to Handle Parallel Processing via a Shared Filesystem in Python
 
-MultiProcessTools is a very lightweight toolkit for lazily handling shared filesystem parallel computations through tempfile creation and collection. In particular, MultiProcessTools introduces a MultiProcessHelper class which can create empty tempfiles as placeholder for a computation as it is running. MultiProcessHelper also keeps track of the tempfiles that have been created and deleted, and allows you to easily perform garbage collection via a cleanup method.
+MultiProcessTools is a very lightweight toolkit for quickly handling shared filesystem parallel analysis through tempfile creation and collection.
+
+In scientific research we are often running the exact same computation on many different files. For instance, you may be performing image semgentation and feature extraction on thousands of images. Is there any way to speed this up? Yes! Parallel computing.
+
+Isn't this problem already solved you may ask; there are packages like [Joblib](https://joblib.readthedocs.io/en/stable/) and even python itself has [native multiprocessing](https://docs.python.org/3/library/concurrent.futures.html). Indeed, but these only work on a single machine: they do not easily lend themselves to cross-machine computing (cluster computing).
+
+You may say yet again this problem has already been rigorously solved via networking (e.g. [Dask](https://www.dask.org)). True, but this requires effort, time, and planning ahead in your code: you're a scientist not a software dev... What if want a quick and dirty way to parrallelize a shared computation performed on many files across your node cluster without all of that setup and coding? What if your collaborators just gave you access to run a few things on their larger server and you don't have a lot of time to network?
+
+In comes MultiProcessTools! We solve this problem by simply coordinating all jobs through the shared file system. In particular, MultiProcessTools introduces a MultiProcessHelper class which can create empty tempfiles as a placeholder for a computation as it is running. MultiProcessHelper also keeps track of the tempfiles that have been created and deleted, and allows you to easily perform garbage collection via a cleanup method. All you need to do is add in a few lines to your script and then you can execute it on any number of machines without conflicts, so long as they share a filesystem.
 
 This project is in its infancy and much of the code is actively being developed (and deleted), so expect major refactoring until future versions specify otherwise. 
 
