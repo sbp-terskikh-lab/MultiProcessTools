@@ -4,12 +4,13 @@ import numpy as np
 import time
 import logging
 from typing import List, Dict
+from logging import Logger
 
 logger = logging.getLogger("MultiProcessTools")
 logger.setLevel(logging.DEBUG)
 
 
-def create_log_StreamHandler(logger: logging.Logger, handler_name: str) -> None:
+def create_log_StreamHandler(logger: Logger, handler_name: str) -> None:
     logger.setLevel(logging.DEBUG)
     ## create a file handler ##
     stream_handler = logging.StreamHandler()
@@ -27,7 +28,7 @@ def create_log_StreamHandler(logger: logging.Logger, handler_name: str) -> None:
     logger.addHandler(stream_handler)
 
 
-def create_log_FileHandler(logger: logging.Logger, handler_name: str, log_file: str) -> None:
+def create_log_FileHandler(logger: Logger, handler_name: str, log_file: str) -> None:
     logger.setLevel(logging.DEBUG)
     ## create a file handler ##
     file_handler = logging.FileHandler(log_file)
@@ -47,21 +48,13 @@ def create_log_FileHandler(logger: logging.Logger, handler_name: str, log_file: 
     logger.addHandler(file_handler)
 
 
-
-
 class MultiProcessHelper:
-    
-    PROCESS_FILE_EXTENTIONS = [
-        ".tmp", ".err", ".fin"
-    ]
-    LOG_FILE_EXTENTIONS = [
-        ".log"
-    ]
-    INSTANCE_FILE_EXTENTIONS = [
-        ".running", ".failed", ".finished"
-    ]
+
+    PROCESS_FILE_EXTENTIONS = [".tmp", ".err", ".fin"]
+    LOG_FILE_EXTENTIONS = [".log"]
+    INSTANCE_FILE_EXTENTIONS = [".running", ".failed", ".finished"]
     STATUS_STATES = ["running", "failed", "finished"]
-    
+
     def __init__(
         self,
         name: str,
@@ -74,10 +67,12 @@ class MultiProcessHelper:
         self.processes = {}
         self.directories = {}
         self.files: Dict[str, list] = {}
-        self.loggers: Dict[str, logging.Logger] = {}
-        self.logger = logging.getLogger("MultiProcessTools")
+        self.loggers: Dict[str, Logger] = {}
+        self.logger: Logger = logging.getLogger("MultiProcessTools")
         try:
-            working_directory = os.path.join(os.path.abspath(output_root), "multiprocesstools")
+            working_directory = os.path.join(
+                os.path.abspath(output_root), "multiprocesstools"
+            )
             os.makedirs(working_directory, exist_ok=True)
             self.directories["working_directory"] = working_directory
         except:
@@ -87,11 +82,11 @@ class MultiProcessHelper:
         self.logger.info(f"Instance number: {self.instance_number}")
         for directory in self.directories.keys():
             self.logger.info(f"{directory}: {self.directories[directory]}")
-                
+
     @property
     def status(self) -> Dict[str, List[str]]:
         pass
-    
+
     def _initialize_instance(self) -> None:
         """Initialize the instance_number number"""
         self.create_directory("instances")
@@ -123,13 +118,17 @@ class MultiProcessHelper:
 
         log_file = os.path.join(log_path, f"{self.name}_{self.instance_number}")
 
-        create_log_FileHandler(self.logger, f"file_handler{self.instance_number}", log_file)
+        create_log_FileHandler(
+            self.logger, f"file_handler{self.instance_number}", log_file
+        )
         create_log_StreamHandler(self.logger, f"stream_handler{self.instance_number}")
         self.logger.info(f"Created log file: {log_file}")
 
         for logger_name in logger_names:
             logger = logging.getLogger(logger_name)
-            create_log_FileHandler(logger, f"file_handler{self.instance_number}", log_file)
+            create_log_FileHandler(
+                logger, f"file_handler{self.instance_number}", log_file
+            )
             create_log_StreamHandler(logger, f"stream_handler{self.instance_number}")
             self.loggers[logger_name] = logger
             logger.info(f"Created log file: {log_file}")
@@ -162,9 +161,7 @@ class MultiProcessHelper:
         else:
             raise ValueError(f"{dir_name} is not in self.directories")
 
-    def create_file(
-        self, file_name: str, dir: str, extentions: List[str]
-    ) -> bool:
+    def create_file(self, file_name: str, dir: str, extentions: List[str]) -> bool:
         """
         Creates a temporary file with the given name.
         returns true if the file was created successfully, false if the file exists.
@@ -197,7 +194,7 @@ class MultiProcessHelper:
             except Exception as e:
                 self.logger.error("Unexpected error:", e.with_traceback())
                 raise e.with_traceback()
-            
+
     def update_file(self, file_name, dir, new_suffix) -> None:
         try:
             idx = self.files[dir].index(file_name)
@@ -216,7 +213,9 @@ class MultiProcessHelper:
             self.logger.info(f"Updating file: {file}")
             new_file = file.replace(f".{current_suffix}", f".{new_suffix}")
             os.rename(file, new_file)
-            new_filename = self.files[dir][idx].replace(f".{current_suffix}", f".{new_suffix}")
+            new_filename = self.files[dir][idx].replace(
+                f".{current_suffix}", f".{new_suffix}"
+            )
             self.files[dir][idx] = new_filename
         else:
             self.logger.error(f"{file} does not exist...")
@@ -236,7 +235,6 @@ class MultiProcessHelper:
             os.remove(file)
         else:
             self.logger.info(f"{file} was already deleted or does not exist...")
-            
 
     def track_process(self, process_name: str) -> bool:
         if process_name in self.processes.keys():
@@ -259,15 +257,17 @@ class MultiProcessHelper:
             self.logger.info(f"{process_name} is already {status}")
             return
         self.processes[process_name]["status"] = status
-        self.logger.info(f"Updated status of {process_name} to {status}")            
-        
+        self.logger.info(f"Updated status of {process_name} to {status}")
+
     def create_process_file(self, process_name: str, file_name: str) -> bool:
         try:
             process_dir = self.processes[process_name]["dir"]
         except KeyError as e:
             self.logger.error(f"{process_name} not in self.processes")
             self.logger.error(e.with_traceback())
-            raise ValueError(f"{process_name} not in self.processes\n\n{e.with_traceback()}")
+            raise ValueError(
+                f"{process_name} not in self.processes\n\n{e.with_traceback()}"
+            )
         success = self.create_file(
             file_name=file_name,
             dir=process_dir,
@@ -276,27 +276,32 @@ class MultiProcessHelper:
         if not success:
             return False
         return True
-    
-    def update_process_file(self, process_name: str, file_name: str, status: str) -> None:
+
+    def update_process_file(
+        self, process_name: str, file_name: str, status: str
+    ) -> None:
         try:
             process_dir = self.processes[process_name]["dir"]
         except KeyError as e:
             self.logger.error(f"{process_name} not in self.processes")
             self.logger.error(e.with_traceback())
-            raise ValueError(f"{process_name} not in self.processes\n\n{e.with_traceback()}")
+            raise ValueError(
+                f"{process_name} not in self.processes\n\n{e.with_traceback()}"
+            )
         try:
             status_idx = self.STATUS_STATES.index(status)
         except ValueError as e:
             self.logger.error(f"{status} not in self.STATUS_STATES")
             self.logger.error(e.with_traceback())
-            raise ValueError(f"{status} not in self.STATUS_STATES\n\n{e.with_traceback()}")
+            raise ValueError(
+                f"{status} not in self.STATUS_STATES\n\n{e.with_traceback()}"
+            )
 
         self.update_file(
             file_name=file_name,
             dir=process_dir,
             new_suffix=self.PROCESS_FILE_EXTENTIONS[status_idx],
         )
-        
 
     def delete_all_files_with_extention(self, extention) -> None:
         """Delete all files with a certain extention"""
@@ -304,7 +309,7 @@ class MultiProcessHelper:
             for file in self.files[directory]:
                 if file.endswith(extention):
                     self.delete_file(file, directory)
-    
+
     def close_all_loggers(self) -> None:
         for logger_name in self.loggers.keys():
             logger = self.loggers.pop(logger_name)
@@ -314,7 +319,7 @@ class MultiProcessHelper:
                 handler.close()
                 logger.removeHandler(handler)
             logger.info("All handlers closed")
-    
+
     def cleanup(self):
         self.logger.info("Cleaning up!")
         self.delete_all_files_with_extention(".tmp")
