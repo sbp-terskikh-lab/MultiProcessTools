@@ -66,10 +66,12 @@ class MultiProcessHelper:
         self.name = name
         self.processes = {}
         self.directories: Dict[str, list] = {}
-        self.files: Dict[str, list] = {}
+        self.files: Dict[str, dict] = {}
         self.loggers: Dict[str, Logger] = {}
         self.logger: Logger = logging.getLogger("MultiProcessTools")
         try:
+            if not isinstance(output_root, Path):
+                output_root = Path(output_root)
             working_directory = output_root / name
             working_directory.mkdir(parents=True, exist_ok=True)
             self.directories["working_directory"] = working_directory
@@ -105,23 +107,23 @@ class MultiProcessHelper:
     ) -> None:
         """Initialize the object loggers"""
         self.create_directory("logs")
-        log_path = self.get_directory("logs")
+        log_file_name = f"{self.name}_{self.instance_number}"
         success = self.create_file(
-            file_name=log_file,
+            file_name=log_file_name,
             dir_name="logs",
             extentions=self.LOG_FILE_EXTENTIONS,
         )
         if not success:
             raise ValueError(f"Log file {log_file} already exists")
 
-        log_file = Path(log_path / f"{self.name}_{self.instance_number}")
+        log_file = self.get_file(log_file_name, "logs")
 
         create_log_FileHandler(
             self.logger, f"file_handler{self.instance_number}", log_file
         )
         create_log_StreamHandler(self.logger, f"stream_handler{self.instance_number}")
-        self.logger.info(f"Created log file: {log_file}")
 
+        self.logger.info(f"Created log file: {log_file}")
         for logger_name in logger_names:
             logger = logging.getLogger(logger_name)
             create_log_FileHandler(
@@ -135,10 +137,8 @@ class MultiProcessHelper:
         path = Path(self.directories["working_directory"] / dir_name)
         if path.exists():
             self.logger.info(f"Path already exists:\n\n{path} ")
-            if dir_name not in self.directories:
+            if dir_name not in self.directories.keys():
                 self.directories[dir_name] = path
-            if dir_name not in self.files:
-                self.files[dir_name] = []
             elif dir_name in self.directories:
                 if self.directories[dir_name] != path:
                     raise ValueError(
@@ -149,13 +149,16 @@ class MultiProcessHelper:
             assert dir_name not in self.directories.keys()
             path.mkdir(parents=True, exist_ok=True)
             self.directories[dir_name] = path
+        if dir_name not in self.files.keys():
+            self.files[dir_name] = {}
 
     def get_directory(self, dir_name) -> Path:
         if any(dir_name in i for i in self.directories.items()):
             if dir_name in self.directories.keys():
-                return self.directories[dir_name]
+                return Path(self.directories[dir_name])
             else:
-                return dir_name
+                logger.warning(f"{dir_name} is a path in self.directories")
+                return
         else:
             raise ValueError(f"{dir_name} is not in self.directories")
 
@@ -166,59 +169,46 @@ class MultiProcessHelper:
         """
         path = self.get_directory(dir_name)
         for extention in extentions:
-            if Path(path / file_name + extention).is_file():
+            if Path(path / (file_name + extention)).is_file():
                 logger.warning(f"File {file_name + extention} already exists")
                 return False
 
-        file = Path(path / file_name + extentions[0])
+        file = Path(path / (file_name + extentions[0]))
         try:
             with open(file, "x") as f:
                 f.close()
-            self.files[dir_name].append(file)
+            self.files[dir_name][file_name] = file
             logger.info(f"Created file: {file}")
             return True
         except FileExistsError:
             logger.warning(f"File {file} already exists")
             return False
         except Exception as e:
-            self.logger.error("Unexpected error:", e.with_traceback())
-            raise e.with_traceback()
+            self.logger.error("Unexpected error:", e)
+            raise e
 
-    def update_file(self, file_name, dir_name, new_suffix) -> None:
+    def get_file(self, file_name, dir_name) -> Path:
         try:
-            idx = self.files[dir_name].index(file_name)
+            file = self.files[dir_name][file_name]
         except KeyError as e:
             logger.error(f"{dir_name} not in self.files")
-            logger.error(e.with_traceback())
-            raise ValueError(f"{dir_name} not in self.files\n\n{e.with_traceback()}")
-        except ValueError as e:
-            logger.error(f"{file_name} not in {dir_name}")
-            logger.error(e.with_traceback())
-            raise ValueError(f"{file_name} not in {dir_name}\n\n{e.with_traceback()}")
-        file = Path(self.get_directory(dir_name) / file_name)
-        current_suffix = self.files[dir_name][idx].split(".")[-1]
-        assert file.suffix == f".{current_suffix}"
+            logger.error(e)
+            raise ValueError(f"{dir_name} not in self.files\n\n{e}")
+        return Path(file)
+
+    def update_file(self, file_name, dir_name, new_suffix) -> None:
+        file = self.get_file(file_name, dir_name)
+        current_suffix = file.suffix
         if file.exists():
             self.logger.info(f"Updating file: {file}")
             new_file = file.with_suffix(f".{new_suffix}")
             file.rename(new_file)
-            new_filename = self.files[dir_name][idx].replace(
-                f".{current_suffix}", f".{new_suffix}"
-            )
-            self.files[dir_name][idx] = new_filename
+            self.files[dir_name][file_name] = new_file
         else:
             self.logger.error(f"{file} does not exist...")
 
     def delete_file(self, file_name, dir_name) -> None:
-        path = self.get_directory(dir_name)
-        try:
-            idx = self.files[dir_name].index(file_name)
-            file_name = self.files[dir_name].pop(idx)
-            file = Path(path / file_name)
-        except ValueError as e:
-            self.logger.error(f"{file_name} not in {dir_name}")
-            self.logger.error(e.with_traceback())
-            raise ValueError(f"{file_name} not in {dir_name}\n\n{e.with_traceback()}")
+        file = self.get_file(file_name, dir_name)
         if file.exists():
             self.logger.info(f"Deleting file: {file}")
             file.unlink()
@@ -253,10 +243,8 @@ class MultiProcessHelper:
             process_dir = self.processes[process_name]["dir_name"]
         except KeyError as e:
             self.logger.error(f"{process_name} not in self.processes")
-            self.logger.error(e.with_traceback())
-            raise ValueError(
-                f"{process_name} not in self.processes\n\n{e.with_traceback()}"
-            )
+            self.logger.error(e)
+            raise ValueError(f"{process_name} not in self.processes\n\n{e}")
         success = self.create_file(
             file_name=file_name,
             dir_name=process_dir,
@@ -273,18 +261,14 @@ class MultiProcessHelper:
             process_dir = self.processes[process_name]["dir_name"]
         except KeyError as e:
             self.logger.error(f"{process_name} not in self.processes")
-            self.logger.error(e.with_traceback())
-            raise ValueError(
-                f"{process_name} not in self.processes\n\n{e.with_traceback()}"
-            )
+            self.logger.error(e)
+            raise ValueError(f"{process_name} not in self.processes\n\n{e}")
         try:
             status_idx = self.STATUS_STATES.index(status)
         except ValueError as e:
             self.logger.error(f"{status} not in self.STATUS_STATES")
-            self.logger.error(e.with_traceback())
-            raise ValueError(
-                f"{status} not in self.STATUS_STATES\n\n{e.with_traceback()}"
-            )
+            self.logger.error(e)
+            raise ValueError(f"{status} not in self.STATUS_STATES\n\n{e}")
 
         self.update_file(
             file_name=file_name,
@@ -296,11 +280,12 @@ class MultiProcessHelper:
         """Delete all files with a certain extention"""
         for directory in self.files:
             for file in self.files[directory]:
-                if file.endswith(extention):
+                if Path(file).suffix == extention:
                     self.delete_file(file, directory)
 
     def close_all_loggers(self) -> None:
-        for logger_name in self.loggers.keys():
+        loggers = tuple(self.loggers.keys())
+        for logger_name in loggers:
             logger = self.loggers.pop(logger_name)
             logger.info("Closing all handlers...")
             for handler in logger.handlers:
