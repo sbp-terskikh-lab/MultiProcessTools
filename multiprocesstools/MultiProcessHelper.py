@@ -218,7 +218,7 @@ class MultiProcessHelper:
     def track_process(self, process_name: str) -> bool:
         if process_name in self.processes.keys():
             raise ValueError(f"{process_name} already in self.processes")
-        process_idx = len(self.processes)
+        process_idx = len(self.processes.keys())
         process_dir = f"p{process_idx}_{process_name}"
         self.create_directory(process_dir)
         self.processes[process_name] = {
